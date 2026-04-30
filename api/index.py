@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yt_dlp
-app = app
+
 
 app = Flask(__name__)
-CORS(app)
+
 
 @app.route('/api/index', methods=['POST', 'GET'])
 def get_link():
