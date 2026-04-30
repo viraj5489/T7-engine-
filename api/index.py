@@ -16,24 +16,44 @@ def get_link():
 
     video_url = data['url']
     
-        ydl_opts = {
+    ydl_opts = {
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
-        # THIS IS THE KEY:
-        'cookiefile': 'api/cookies.txt',
+        # The Secret Sauce: Pretending to be an Android TV
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['tvhtml5', 'android', 'ios'],
+                'player_skip': ['webpage', 'configs'],
+            }
+        },
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
         }
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
+            
+            # Try to get the direct URL
             download_url = info.get('url')
             
-            # Fallback if first URL is missing
+            # If the direct URL isn't there, check the formats list
+            if not download_url and 'formats' in info:
+                # We look for the last format that has both video and audio
+                for f in reversed(info['formats']):
+                    if f.get('vcodec') != 'none' and f.get('acodec') != 'none':
+                        download_url = f.get('url')
+                        break
+
+            if not download_url:
+                return jsonify({"error": "YouTube blocked this specific video format."}), 403
+
+            return jsonify({"url": download_url})
+    except Exception as e:
+        return jsonify({"error": "YouTube bot-check still active. Try again in 10 minutes."}), 500
             if not download_url and 'formats' in info:
                 for f in reversed(info['formats']):
                     if f.get('url') and (f.get('vcodec') != 'none' and f.get('acodec') != 'none'):
