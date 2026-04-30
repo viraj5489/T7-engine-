@@ -20,26 +20,38 @@ def get_link():
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
-        # Force the engine to use a different extraction client
-        'youtube_include_dash_manifest': False,
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
-        },
         'nocheckcertificate': True,
+        # This forces the use of the "Web" client which is harder to block
+        'youtube_include_dash_manifest': False,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['web'],
+                'skip': ['dash', 'hls']
+            }
+        },
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Origin': 'https://www.youtube.com',
+        }
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # We use 'download=False' to just get the link
             info = ydl.extract_info(video_url, download=False)
+            download_url = info.get('url')
             
-            # Check for direct URL or manifest URL
-            download_url = info.get('url') or info.get('formats', [{}])[-1].get('url')
+            # Fallback if first URL is missing
+            if not download_url and 'formats' in info:
+                for f in reversed(info['formats']):
+                    if f.get('url') and (f.get('vcodec') != 'none' and f.get('acodec') != 'none'):
+                        download_url = f['url']
+                        break
             
             if not download_url:
-                return jsonify({"error": "Link not found for this specific video."}), 404
+                return jsonify({"error": "YouTube blocked this specific video. Try a different one."}), 403
                 
             return jsonify({"url": download_url})
     except Exception as e:
-        # If it still fails, give a clear instruction to the user
-        return jsonify({"error": "YouTube bot-check triggered. Try again in a few minutes with a different video link."}), 500
+        return jsonify({"error": "Bot-check triggered. Please wait 10 mins or try a different video."}), 500
