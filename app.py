@@ -6,6 +6,13 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# ... (all your route code) ...
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+
+
 @app.route('/api/index', methods=['POST', 'GET'])
 def get_link():
     if request.method == 'GET':
