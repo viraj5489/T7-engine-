@@ -16,24 +16,15 @@ def get_link():
 
     video_url = data['url']
     
-    ydl_opts = {
+        ydl_opts = {
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
-        # This forces the use of the "Web" client which is harder to block
-        'youtube_include_dash_manifest': False,
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['web'],
-                'skip': ['dash', 'hls']
-            }
-        },
+        # THIS IS THE KEY:
+        'cookiefile': 'api/cookies.txt',
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Origin': 'https://www.youtube.com',
         }
     }
 
