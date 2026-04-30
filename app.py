@@ -26,19 +26,25 @@ def get_link():
     video_url = data['url']
     cookie_path = 'cookies.txt'
     
-    ydl_opts = {
+        ydl_opts = {
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
         'cookiefile': cookie_path if os.path.exists(cookie_path) else None,
-        # The "Mobile/Android" trick is currently stronger than "TV"
         'extractor_args': {
             'youtube': {
-                'player_client': ['android', 'web_embedded'],
+                'player_client': ['ios'], # Pretend to be an iPhone
                 'player_skip': ['webpage', 'configs'],
             }
         },
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
+    }
+
         'http_headers': {
             'User-Agent': random.choice(USER_AGENTS),
             'Accept': '*/*',
