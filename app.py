@@ -17,7 +17,7 @@ def get_link():
 
     video_url = data['url']
     
-    # Path to cookies - since we moved app.py to root, cookies.txt is in root too
+    # Path to cookies in the root folder
     cookie_path = 'cookies.txt'
     
     ydl_opts = {
@@ -25,9 +25,9 @@ def get_link():
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
-        # Use cookies if the file exists
+        # TRICK 1: Use the Cookies if the file exists
         'cookiefile': cookie_path if os.path.exists(cookie_path) else None,
-        # Stealth TV and Mobile signatures
+        # TRICK 2: Use the "TV" client to bypass the bot-check
         'extractor_args': {
             'youtube': {
                 'player_client': ['tvhtml5', 'android', 'ios'],
@@ -44,22 +44,17 @@ def get_link():
             info = ydl.extract_info(video_url, download=False)
             download_url = info.get('url')
             
-            # Fallback if the first URL is restricted
             if not download_url and 'formats' in info:
                 for f in reversed(info['formats']):
                     if f.get('vcodec') != 'none' and f.get('acodec') != 'none':
                         download_url = f.get('url')
                         break
 
-            if not download_url:
-                return jsonify({"error": "Link extraction failed."}), 403
-
             return jsonify({"url": download_url})
     except Exception as e:
-        error_msg = str(e)
-        if "Sign in" in error_msg:
-            return jsonify({"error": "YouTube Bot-Check active. Refresh cookies or try later."}), 403
-        return jsonify({"error": "Engine busy. Try a different video."}), 500
+        # This is the message you saw in your screenshot
+        return jsonify({"error": "YouTube Bot-Check active. Refresh cookies or try later."}), 403
 
+app = app
 # Required for Vercel 2026
 app = app
