@@ -72,3 +72,4 @@ def get_link():
             return jsonify({"url": download_url})
     except Exception as e:
         return jsonify({"error": "Bot-check triggered. Please wait 10 mins or try a different video."}), 500
+app = app 
