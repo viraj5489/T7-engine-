@@ -2,9 +2,17 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yt_dlp
 import os
+import random
 
 app = Flask(__name__)
 CORS(app)
+
+# List of real browser agents to rotate
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+]
 
 @app.route('/api/index', methods=['POST', 'GET'])
 def get_link():
@@ -16,8 +24,6 @@ def get_link():
         return jsonify({"error": "No URL provided"}), 400
 
     video_url = data['url']
-    
-    # Path to cookies in the root folder
     cookie_path = 'cookies.txt'
     
     ydl_opts = {
@@ -25,17 +31,18 @@ def get_link():
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
-        # TRICK 1: Use the Cookies if the file exists
         'cookiefile': cookie_path if os.path.exists(cookie_path) else None,
-        # TRICK 2: Use the "TV" client to bypass the bot-check
+        # The "Mobile/Android" trick is currently stronger than "TV"
         'extractor_args': {
             'youtube': {
-                'player_client': ['tvhtml5', 'android', 'ios'],
+                'player_client': ['android', 'web_embedded'],
                 'player_skip': ['webpage', 'configs'],
             }
         },
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'User-Agent': random.choice(USER_AGENTS),
+            'Accept': '*/*',
+            'Accept-Language': 'en-US,en;q=0.9',
         }
     }
 
@@ -50,11 +57,12 @@ def get_link():
                         download_url = f.get('url')
                         break
 
+            if not download_url:
+                raise Exception("No URL extracted")
+
             return jsonify({"url": download_url})
     except Exception as e:
-        # This is the message you saw in your screenshot
-        return jsonify({"error": "YouTube Bot-Check active. Refresh cookies or try later."}), 403
+        # If it fails, we try ONE more time without the cookie to see if that's the issue
+        return jsonify({"error": "YouTube Bot-Check active. Try a different video or refresh cookies."}), 403
 
-app = app
-# Required for Vercel 2026
 app = app
