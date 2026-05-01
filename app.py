@@ -34,7 +34,7 @@ def get_video_data():
     # --- RENDER READ-ONLY FIX END ---
 
     ydl_opts = {
-        'format': 'best',
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
