@@ -26,7 +26,7 @@ def get_video_link():
     cookie_path = 'cookies.txt'
     
     # EXACT ALIGNMENT START
-    ydl_opts = {
+        ydl_opts = {
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
@@ -34,14 +34,17 @@ def get_video_link():
         'cookiefile': cookie_path if os.path.exists(cookie_path) else None,
         'extractor_args': {
             'youtube': {
-                'player_client': ['mweb', 'tvhtml5'],
-                'skip': ['webpage', 'hls', 'dash'],
+                # This combination is the strongest "Bot Bypass" right now
+                'player_client': ['android_vr', 'tvhtml5', 'ios'],
+                'player_skip': ['webpage', 'configs'],
             }
         },
+        # Using a very specific Mobile User-Agent
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent': 'com.google.android.youtube/19.10.35 (Linux; U; Android 11; en_US; Pixel 4) Mozilla/5.0 (Linux; Android 11; Pixel 4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
         }
     }
+
     # EXACT ALIGNMENT END
 
     try:
