@@ -11,45 +11,55 @@ CORS(app)
 def health():
     return "<h1>T7 Engine Online</h1>", 200
 
+import shutil # Add this at the very top of your app.py
+
 @app.route('/api/index', methods=['GET', 'POST'])
-def get_video():
+def get_video_data():
     if request.method == 'GET':
-        return jsonify({"status": "ready"}), 200
+        return jsonify({"status": "API is listening"}), 200
 
     data = request.get_json(silent=True)
     if not data or 'url' not in data:
-        return jsonify({"error": "No URL"}), 400
+        return jsonify({"error": "Missing URL parameter"}), 400
 
-    url = data['url']
-    cookies = 'cookies.txt'
+    video_url = data['url']
     
-    # 2026 'TV-Bypass' Logic - Specifically to fix Error 152
+    # --- RENDER READ-ONLY FIX START ---
+    original_cookie_path = 'cookies.txt'
+    temp_cookie_path = '/tmp/cookies.txt'
+
+    # Move the cookie file to the writable /tmp folder
+    if os.path.exists(original_cookie_path):
+        shutil.copy2(original_cookie_path, temp_cookie_path)
+    # --- RENDER READ-ONLY FIX END ---
+
     ydl_opts = {
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': cookies if os.path.exists(cookies) else None,
+        'nocheckcertificate': True,
+        'cookiefile': temp_cookie_path if os.path.exists(temp_cookie_path) else None,
         'extractor_args': {
             'youtube': {
-                # 'tv' and 'tv_downgraded' are the only ones skipping JS challenges
-                'player_client': ['tv', 'tv_downgraded', 'web_embedded'],
-                'player_skip': ['webpage', 'configs']
+                'player_client': ['tvhtml5', 'android', 'web_embedded'],
+                'player_skip': ['configs', 'webpage']
             }
+        },
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
         }
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Mimic a human 'thinking' before clicking
-            time.sleep(1.5)
-            info = ydl.extract_info(url, download=False)
+            info = ydl.extract_info(video_url, download=False)
             return jsonify({
                 "url": info.get('url'),
                 "title": info.get('title'),
-                "thumb": info.get('thumbnail')
+                "thumbnail": info.get('thumbnail')
             })
     except Exception as e:
-        return jsonify({"error": f"YouTube security active: {str(e)}"}), 403
+        return jsonify({"error": str(e)}), 403
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
