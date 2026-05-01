@@ -4,61 +4,53 @@ from flask_cors import CORS
 import yt_dlp
 
 app = Flask(__name__)
-# Enable CORS so your website trendyever7.com can talk to this server
 CORS(app)
 
-# FIX: This handles the main URL (https://t7-engine.onrender.com)
 @app.route('/', methods=['GET'])
-def health_check():
-    return "<h1>T7 Engine is Online</h1><p>API Endpoint: <code>/api/index</code></p>", 200
+def health():
+    return "<h1>T7 Engine Online</h1>", 200
 
-# This handles the actual video link generation
 @app.route('/api/index', methods=['GET', 'POST'])
-def get_video_link():
+def get_video():
     if request.method == 'GET':
-        return jsonify({"status": "Online", "message": "API is ready"}), 200
+        return jsonify({"status": "ready"}), 200
 
     data = request.get_json(silent=True)
     if not data or 'url' not in data:
-        return jsonify({"error": "No URL provided"}), 400
+        return jsonify({"error": "No URL"}), 400
 
-    video_url = data['url']
-    cookie_path = 'cookies.txt'
+    url = data['url']
+    cookies = 'cookies.txt'
     
-    # EXACT ALIGNMENT START
-        ydl_opts = {
+    # Updated 2026 Stealth Settings
+    ydl_opts = {
         'format': 'best',
         'quiet': True,
         'no_warnings': True,
-        'nocheckcertificate': True,
-        'cookiefile': cookie_path if os.path.exists(cookie_path) else None,
+        'cookiefile': cookies if os.path.exists(cookies) else None,
         'extractor_args': {
             'youtube': {
-                # This combination is the strongest "Bot Bypass" right now
-                'player_client': ['android_vr', 'tvhtml5', 'ios'],
-                'player_skip': ['webpage', 'configs'],
+                # 'web_embedded' is the 2026 secret for bypassing bot checks
+                'player_client': ['web_embedded', 'tvhtml5'],
+                'player_skip': ['configs', 'webpage']
             }
         },
-        # Using a very specific Mobile User-Agent
         'http_headers': {
-            'User-Agent': 'com.google.android.youtube/19.10.35 (Linux; U; Android 11; en_US; Pixel 4) Mozilla/5.0 (Linux; Android 11; Pixel 4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
     }
 
-    # EXACT ALIGNMENT END
-
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=False)
+            info = ydl.extract_info(url, download=False)
             return jsonify({
                 "url": info.get('url'),
                 "title": info.get('title'),
-                "thumbnail": info.get('thumbnail')
+                "thumb": info.get('thumbnail')
             })
     except Exception as e:
-        return jsonify({"error": f"Bot Check Active: {str(e)}"}), 403
+        return jsonify({"error": str(e)}), 403
 
-# Required for Render to find the correct Port
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
