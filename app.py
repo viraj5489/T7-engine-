@@ -59,6 +59,7 @@ def get_video_data():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)    port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=10000)        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
