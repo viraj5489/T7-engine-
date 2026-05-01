@@ -59,6 +59,31 @@ def get_video_data():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)        'sleep_interval': 2,
+        'max_sleep_interval': 5,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['ios'],
+            }
+        },
+        'http_headers': {
+            'User-Agent': 'com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)'
+        }
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=False)
+            return jsonify({
+                "url": info.get('url'),
+                "title": info.get('title'),
+                "thumbnail": info.get('thumbnail')
+            })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)    port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=10000)        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'quiet': True,
