@@ -31,20 +31,22 @@ def get_video_link():
     cookie_path = 'cookies.txt'
     
         ydl_opts = {
+            ydl_opts = {
         'format': 'best',
         'quiet': True,
+        'no_warnings': True,
+        'nocheckcertificate': True,
         'cookiefile': cookie_path if os.path.exists(cookie_path) else None,
         'extractor_args': {
             'youtube': {
-                'player_client': ['ios', 'android', 'web'],
-                # This helps bypass the 'Sign in' wall for many videos
-                'po_token': ['web+PO_TOKEN_HERE'], 
+                # 'mweb' and 'tv' are currently the most successful on Render
+                'player_client': ['mweb', 'tvhtml5'], 
+                # This bypasses the need for a manual PO Token in many cases
+                'skip': ['webpage', 'hls', 'dash'],
             }
-        }
-    },
-
+        },
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         }
     }
 
